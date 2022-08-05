@@ -16,7 +16,8 @@ float wrap = 39062;
 const int degree = 0;
 
 //Modo operación (automático, control remoto)
-const int opMode = 10;
+const int opModePin = 10;
+bool opMode = true;
 
 //Servomotor 1
 const int servoPin1 = 0;
@@ -32,6 +33,9 @@ float grados2 = 90;
 bool rightButton = false;
 bool leftButton = false;
 
+//LED Interno
+const uint LED_PIN = PICO_DEFAULT_LED_PIN;
+
 //Factor de converion del adc
 const float conversion_factor = 3.3f / (1 << 12);
 
@@ -40,9 +44,16 @@ int main()
     setPeripherals(); 
     while (true)
     {
-        setVela();
-        setTimon();
-        sleep_ms(50);
+        opMode = gpio_get(opModePin);
+        if(opMode){
+            gpio_put(LED_PIN, 0);
+            setVela();
+            setTimon();
+            sleep_ms(50);
+        }
+        else{
+            gpio_put(LED_PIN, 1);
+        }
     }
 }
 
@@ -51,6 +62,14 @@ void setPeripherals(){
     //SYS_INIT
     adc_init();
     stdio_init_all();
+
+    //Modo de operación
+    gpio_init(opModePin);
+    gpio_set_dir(opModePin, GPIO_IN);
+
+    //LED Interno
+    gpio_init(LED_PIN);
+    gpio_set_dir(LED_PIN, GPIO_OUT);
     
     //Potenciometro
     adc_gpio_init(timonPin);
