@@ -19,6 +19,9 @@ const int degree = 0;
 const int opModePin = 10;
 bool opMode = true;
 
+//LED Interno
+const uint LED_PIN = PICO_DEFAULT_LED_PIN;
+
 //Servomotor 1
 const int servoPin1 = 0;
 const int timonPin = 28;
@@ -32,9 +35,6 @@ const int leftPin = 15;
 float grados2 = 90;
 bool rightButton = false;
 bool leftButton = false;
-
-//LED Interno
-const uint LED_PIN = PICO_DEFAULT_LED_PIN;
 
 //Factor de converion del adc
 const float conversion_factor = 3.3f / (1 << 12);
