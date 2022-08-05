@@ -3,42 +3,54 @@
 #include "hardware/pwm.h"
 #include "hardware/clocks.h"
 #include "hardware/adc.h"
-#include "hardware/timer.h"
-#include "hardware/irq.h"
 
-void setDegree(int servoPin, float degree);
-void setServo(int servoPin, float startDegree);
-// bool setServos();
+void setDegree(int servoPin, float degree); //Asignar angulo a servo
+void setServo(int servoPin, float startDegree); //Inicializar servo
+void setPeripherals(); //Inicialializar sistema y perofericos
+void setVela(); //Controlar vela
+void setTimon(); //Controlar timon
 
-repeating_timer_t timer;
-
+//Variables Funciones del Servo
 const float clockDiv = 64;
 float wrap = 39062;
 const int degree = 0;
 
+//Modo operación (automático, control remoto)
+const int opMode = 10;
+
+//Servomotor 1
 const int servoPin1 = 0;
 const int timonPin = 28;
 uint16_t potenciometro;
 float grados1;
-float grados2 = 90;
 
+//Servomotor 2
 const int servoPin2 = 1;
-const int rightPin = 19;
-const int leftPin = 18;
+const int rightPin = 12;
+const int leftPin = 15;
+float grados2 = 90;
 bool rightButton = false;
 bool leftButton = false;
 
+//Factor de converion del adc
 const float conversion_factor = 3.3f / (1 << 12);
 
 int main()
 {
+    setPeripherals(); 
+    while (true)
+    {
+        setVela();
+        setTimon();
+        sleep_ms(50);
+    }
+}
 
+//INICIALIZAR
+void setPeripherals(){
     //SYS_INIT
     adc_init();
     stdio_init_all();
-
-    //Timer IRQ
-    // add_repeating_timer_ms(50, setServos, NULL, &timer);
     
     //Potenciometro
     adc_gpio_init(timonPin);
@@ -51,61 +63,43 @@ int main()
     gpio_init(leftPin);
     gpio_set_dir(rightPin, GPIO_IN);
     gpio_set_dir(leftPin, GPIO_IN); 
-        
-    while (true)
-    {
-        potenciometro = adc_read();
-        //printf("Raw value: 0x%03x, voltage: %f V\n", potenciometro, potenciometro * conversion_factor);
-        grados1 = (potenciometro * conversion_factor) * (54.54);
-        //printf("Grados: %f °\n", grados);
-        setDegree(servoPin1, grados1);
-
-        rightButton = gpio_get(rightPin);
-        leftButton = gpio_get(leftPin);
-        if(rightButton & (grados2<=175)){
-            printf("Derecha \n");
-            grados2 += 5;
-        }
-        else if(leftButton & (grados2>=5)){
-            printf("Izquierda \n");
-            grados2 -= 5;
-        }
-        else if(grados2>=95){
-            grados2 -= 5;
-        }
-        else if(grados2<=85){
-            grados2 += 5;
-        }
-        setDegree(servoPin2, grados2);
-
-        sleep_ms(50);
-    }
 }
 
-// bool setServos(){
-//     potenciometro = adc_read();
-//     //printf("Raw value: 0x%03x, voltage: %f V\n", potenciometro, potenciometro * conversion_factor);
-//     grados = (potenciometro * conversion_factor) * (54.54);
-//     //printf("Grados: %f °\n", grados);
-//     setDegree(servoPin1, grados);
+//CONTROLAR MOTORES
+void setVela(){
+    potenciometro = adc_read();
+    // printf("Raw value: 0x%03x, voltage: %f V\n", potenciometro, potenciometro * conversion_factor);
+    grados1 = (potenciometro * conversion_factor) * (55);
+    // printf("Grados: %f °\n", grados1);
+    setDegree(servoPin1, grados1);
+}
+void setTimon(){
+    rightButton = gpio_get(rightPin);
+    leftButton = gpio_get(leftPin);
+    if(rightButton & (grados2<=175)){
+        // printf("Derecha \n");
+        grados2 += 5;
+    }
+    else if(leftButton & (grados2>=5)){
+        // printf("Izquierda \n");
+        grados2 -= 5;
+    }
+    else if(grados2>=95){
+        grados2 -= 5;
+    }
+    else if(grados2<=85){
+        grados2 += 5;
+    }
+    setDegree(servoPin2, grados2);
+}
 
-//     rightButton = gpio_get(rightPin);
-//     leftButton = gpio_get(leftPin);
-//     if(rightButton){
-//         printf("Derecha \n");
-//     }
-//     else if(leftButton){
-//         printf("Izquierda \n");
-//     }
-// }
-
+//FUNCIONES DEL SERVO
 void setDegree(int servoPin, float degree)
 {
     float millis;
     millis = ((100/9)*degree) + 400;
     pwm_set_gpio_level(servoPin, (millis/20000.f)*wrap);
 }
-
 void setServo(int servoPin, float startDegree)
 {
     gpio_set_function(servoPin, GPIO_FUNC_PWM);
@@ -126,18 +120,3 @@ void setServo(int servoPin, float startDegree)
     startMillis = ((100/9)*startDegree) + 400;
     setDegree(servoPin, startMillis);
 }
-
-// void pushButton(bool buttonDer, bool buttonIzq)
-// {
-//     int pos = 0;
-//     if(buttonDer)
-//     {
-//         pos += 5;
-//     }
-//     else if(buttonIzq)
-//     {
-
-//     }
-    
-// }
-

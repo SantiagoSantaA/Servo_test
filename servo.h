@@ -1,5 +1,5 @@
-#ifndef servo_lib_h
-#define servo_lib_h
+#ifndef servo_h
+#define servo_h
 
 void setDegree(int servoPin, float degree);
 void setServo(int servoPin, float startDegree);
